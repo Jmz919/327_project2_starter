@@ -23,7 +23,7 @@ struct word {
 };
 
 //TODO define a structure to track words and number of times they occur
-struct word words[100];
+struct word words[];
 
 //TODO add variable to keep track of next available slot in array
 int index = 0;
@@ -32,7 +32,7 @@ int index = 0;
 
 //zero out array that tracks words and their occurrences
 void clearArray() {
-	struct word temp[1];
+	struct word temp[];
 	words = temp;
 }
 
@@ -106,11 +106,12 @@ void processToken(std::string &token) {
 		if (token == words[i].wrd) {
 			words[i].occur += 1;
 			first = false;
+			break;
 		}
 	}
 
 	if (first) {
-		word first_occur;
+		struct word first_occur;
 		first_occur.wrd = token;
 		first_occur.occur = 1;
 		words[index] = first_occur;
@@ -130,12 +131,15 @@ void processToken(std::string &token) {
   in this case Project2 with the .project and .cProject files*/
 bool openFile(std::fstream& myfile, const std::string& myFileName,
 		std::ios_base::openmode mode = std::ios_base::in) {
-	return myfile.open(myFileName.c_str(), mode);
+	myfile.open(myFileName.c_str(), mode);
+	return myfile.is_open();
 }
 
 /*iff myfile is open then close it*/
 void closeFile(std::fstream& myfile) {
-	myfile.close();
+	if (myfile.is_open()) {
+		myfile.close();
+	}
 }
 
 /* serializes all content in myEntryArray to file outputfilename
@@ -152,8 +156,8 @@ int writeArraytoFile(const std::string &outputfilename) {
 	}
 
 	ofstream myEntryArray;
-
 	myEntryArray.open(outputfilename.c_str());
+
 	if (myEntryArray.is_open()) {
 		myEntryArray << words;
 		myEntryArray.close();
@@ -171,15 +175,49 @@ int writeArraytoFile(const std::string &outputfilename) {
  */
 void sortArray(constants::sortOrder so) {
 	using namespace constants;
+	using namespace std;
 	switch (so) {
 	case (ASCENDING):
+		for (int i = 0; i < sizeof(words) - 1; i++) {
+			for (int j = 0; j < sizeof(words) - i - 1; j++) {
+				if (words[j].wrd.compare(words[j+1].wrd) > 0) {
+					struct word temp;
+					temp.wrd = words[j].wrd;
+					temp.occur = words[j].occur;
 
+					words[j] = words[j+1];
+					words[j+1] = temp;
+				}
+			}
+		}
 		break;
 	case (DESCENDING):
+		for (int i = sizeof(words) - 1; i < 0; i--) {
+			for (int j = sizeof(words) - i - 1; j < 0; j--) {
+				if (words[j].wrd.compare(words[j-1].wrd) > 0) {
+					struct word temp;
+					temp.wrd = words[j].wrd;
+					temp.occur = words[j].occur;
+
+					words[j] = words[j-1];
+					words[j-1] = temp;
+				}
+			}
+		}
 		break;
 	case (NUMBER_OCCURRENCES):
-		break;
-	default:
+		for (int i = 0; i < sizeof(words) - 1; i++) {
+			for (int j = 0; j < sizeof(words) - i - 1; j++) {
+				if (words[j].occur < words[j+1].occur) {
+					struct word temp;
+					temp.wrd = words[j].wrd;
+					temp.occur = words[j].occur;
 
+					words[j] = words[j+1];
+					words[j+1] = temp;
+				}
+			}
+		}
+		break;
 	}
 }
